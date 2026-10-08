@@ -20,7 +20,7 @@ bun run setup    # connects Convex and the hub, once
 bun run dev      # http://localhost:3000
 ```
 
-Scripts and agents skip the questions with `--hub-url` and `--admin-password`, or with `HUB_URL` and `HUB_ADMIN_PASSWORD` already in the environment.
+Scripts and agents skip the questions when `HUB_URL` and `HUB_ADMIN_PASSWORD` are already in the environment. If another app already has your app's name in the hub, `bun run setup` asks you for a new one.
 
 ## Add it to an existing app
 

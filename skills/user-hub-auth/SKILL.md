@@ -15,7 +15,7 @@ If there is no app yet, don't build one by hand: scaffold one with sign-in alrea
 bun create @user-hub my-app
 ```
 
-In a terminal it asks for the hub's URL and admin password and saves them to the new app's `.env.local`. As an agent you never handle the password, so either ask the human to run it, or run it only when `HUB_URL` and `HUB_ADMIN_PASSWORD` are already in the environment (for example `infisical run -- bun create @user-hub my-app`). Never pass `--admin-password` with a value you typed yourself.
+In a terminal it asks for the hub's URL and admin password and saves them to the new app's `.env.local`. As an agent you never handle the password, so either ask the human to run it, or run it only when `HUB_URL` and `HUB_ADMIN_PASSWORD` are already in the environment (for example `infisical run -- bun create @user-hub my-app`).
 
 Then:
 
@@ -58,8 +58,10 @@ You need four things. Ask for them; never guess.
 2. **Register the app** from the app's repo root, with `HUB_URL` and the password supplied the way the human chose in question 3 above:
 
    ```sh
-   bunx hub-user register --name "<app name>" --prod https://app.example.com --dev http://localhost:3000
+   bunx hub-user register --name "<app name>" --new --prod https://app.example.com --dev http://localhost:3000
    ```
+
+   `--new` makes sure you never take over another app: if the name is already taken, nothing changes and it exits with code 3 and "already exists". Then ask the human for another name and run it again. Drop `--new` only when updating this app's own registration later.
 
    Leave out `--prod` if the app is not deployed yet. Running it again with the same `--name` updates the URLs; a URL left out keeps the registered one. If it fails with "set HUB_URL", "set HUB_ADMIN_PASSWORD" or a wrong password, stop and ask the human; do not work around it.
 
