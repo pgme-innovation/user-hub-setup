@@ -12,10 +12,10 @@ People at a workshop scan a printed QR badge. The hub sends them to whichever ap
 If there is no app yet, don't build one by hand: scaffold one with sign-in already wired (TanStack Start + Convex, sign-in and sign-out, a facilitator page, `CLAUDE.md` and this skill):
 
 ```sh
-bun create @user-hub@latest my-app
+bun create user-hub@latest my-app
 ```
 
-In a terminal it asks for the hub's URL and admin password and saves them to the new app's `.env.local`. As an agent you never handle the password, so either ask the human to run it, or run it only when `HUB_URL` and `HUB_ADMIN_PASSWORD` are already in the environment (for example `infisical run -- bun create @user-hub@latest my-app`).
+In a terminal it asks for the hub's URL and admin password and saves them to the new app's `.env.local`. As an agent you never handle the password, so either ask the human to run it, or run it only when `HUB_URL` and `HUB_ADMIN_PASSWORD` are already in the environment (for example `infisical run -- bun create user-hub@latest my-app`).
 
 Then:
 

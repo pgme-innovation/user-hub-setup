@@ -9,7 +9,7 @@ An agent skill that connects an app to [User Hub](https://www.npmjs.com/package/
 The quickest way: a TanStack Start + Convex app with sign-in, sign-out, a facilitator page, `CLAUDE.md` and this skill already wired.
 
 ```sh
-bun create @user-hub@latest my-app
+bun create user-hub@latest my-app
 ```
 
 It asks for your hub's URL and admin password (the password shows as stars) and saves them to the app's `.env.local`. Then:
