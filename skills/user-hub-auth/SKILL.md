@@ -116,6 +116,19 @@ Run the app as usual (`bun run dev`) on the `--dev` URL you registered. Opening 
 - If the dev server runs on another port, run `hub-user register` again with the same `--name` and the new `--dev` URL: the hub only sends tokens back to registered URLs.
 - This only happens on local addresses (localhost, 127.x, 10.x, 172.16-31.x, 192.168.x, *.local). In production a person without a token sees "Scan your badge to sign in".
 
+## Production URL
+
+Badge scans only reach an app once the hub knows its production URL. When the human asks to set up the production URL (or says the app is deployed), ask for the deployed URL (never guess), then:
+
+- **Starter apps** (they have `scripts/setup.ts`): `bun run setup --prod https://<deployed url>`. It updates the app's own registration and sets `HUB_ISSUER` and `HUB_JWKS` on the production Convex deployment too.
+- **Other apps:** `bunx hub-user register --name "<the app's name in the hub>" --prod https://<deployed url>`, without `--new` (this updates the app's own registration; the name is `HUB_APP_NAME` in `.env.local`, or ask the human). Then set the two printed values on production: `bunx convex env set --prod HUB_ISSUER '…'` and `bunx convex env set --prod HUB_JWKS '…'`.
+
+Then:
+
+1. `bunx convex deploy`.
+2. On the host, set `VITE_CONVEX_URL` (the production deployment's URL) and `VITE_HUB_URL` (the hub's URL).
+3. Tell the human the app is ready for the hub admin to schedule (or force live) under **Schedule**; until then badge scans go to whichever app is live.
+
 ## Sign out
 
 Use `useHubSignOut()` from the same entry point as the provider; never clear storage or tokens yourself.
