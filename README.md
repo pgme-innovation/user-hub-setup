@@ -10,7 +10,7 @@ An agent skill that connects an app to [User Hub](https://www.npmjs.com/package/
 bunx skills add pgme-innovation/user-hub-setup
 ```
 
-Then ask your agent to connect the app to User Hub.
+Then ask your agent to connect your app to User Hub, or to start a new one with `bun create @user-hub my-app`.
 
 ## What you need
 

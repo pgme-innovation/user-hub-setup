@@ -7,6 +7,26 @@ description: Sign people into an app from their User Hub badge. Use when an app 
 
 People at a workshop scan a printed QR badge. The hub sends them to whichever app is live, signed in, with a token in the URL fragment (`#token=…`) that only that app accepts. This package turns that token into a signed-in person. The app keeps its own data, keyed on the person's hub id.
 
+## Starting a new app
+
+If there is no app yet, don't build one by hand: scaffold one with sign-in already wired (TanStack Start + Convex, sign-in and sign-out, a facilitator page, `CLAUDE.md` and this skill):
+
+```sh
+bun create @user-hub my-app
+```
+
+In a terminal it asks for the hub's URL and admin password and saves them to the new app's `.env.local`. As an agent you never handle the password, so either ask the human to run it, or run it only when `HUB_URL` and `HUB_ADMIN_PASSWORD` are already in the environment (for example `infisical run -- bun create @user-hub my-app`). Never pass `--admin-password` with a value you typed yourself.
+
+Then:
+
+```sh
+cd my-app
+bun run setup    # Convex project, hub registration, HUB_ISSUER and HUB_JWKS, once
+bun run dev      # http://localhost:3000
+```
+
+That covers every step below; read on only to add User Hub to an existing app or to change the wiring.
+
 ## The hub's URL
 
 The hub has one address, for example `https://hub.example.com`. The human gives it to you; you need it in three places, all with the same value:
@@ -93,6 +113,17 @@ Run the app as usual (`bun run dev`) on the `--dev` URL you registered. Opening 
 - To switch person: open `<hub>/open/<key>` and pick someone else.
 - If the dev server runs on another port, run `hub-user register` again with the same `--name` and the new `--dev` URL: the hub only sends tokens back to registered URLs.
 - This only happens on local addresses (localhost, 127.x, 10.x, 172.16-31.x, 192.168.x, *.local). In production a person without a token sees "Scan your badge to sign in".
+
+## Sign out
+
+Use `useHubSignOut()` from the same entry point as the provider; never clear storage or tokens yourself.
+
+```tsx
+const signOut = useHubSignOut();
+<button onClick={signOut}>Sign out</button>
+```
+
+It forgets this app's token only. In production the person then sees the signed-out screen and scans their badge again; on a local dev server the hub opens to pick another person.
 
 ## Facilitator pages
 
