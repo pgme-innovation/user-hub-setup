@@ -110,7 +110,7 @@ You need four things. Ask for them; never guess.
 
 ## Your dev server
 
-Run the app as usual (`bun run dev`) on the `--dev` URL you registered. Opening it with no token sends the browser to the hub (admin password once per browser), where you pick who to be; the hub sends you back signed in as them. The token is kept for 4 hours across reloads and restarts, then the same thing happens again.
+Run the app as usual (`bun run dev`) on the `--dev` URL you registered. Opening it with no token sends the browser to the hub (admin password once per browser), where you pick who to be; the hub sends you back signed in as them. You stay signed in across reloads and restarts for as long as that person's sign-in lasts in the hub (4 hours unless set otherwise), then the same thing happens again.
 
 - To switch person: open `<hub>/open/<key>` and pick someone else.
 - If the dev server runs on another port, run `hub-user register` again with the same `--name` and the new `--dev` URL: the hub only sends tokens back to registered URLs.
@@ -181,5 +181,5 @@ People are either `"member"` or `"facilitator"`, set in the hub. To give facilit
 
 - Key all data on the hub id (`identity.subject` / `useHubUser().id`). Never on the name, and never on the badge token, which the app never sees.
 - Check access on the server: `requireFacilitator(ctx)` / `requireHubUser(ctx)` in Convex, or `verifyHubToken` elsewhere. `useHubUser()` is for display only.
-- Tokens last 4 hours; the provider then shows the signed-out screen. Do not try to refresh them: people scan their badge again.
+- The provider refreshes tokens with the hub (`<hub>/api/token/refresh`) while the app is open; the hub decides how long a session lasts and when it ends, and the provider then shows the signed-out screen. Do not refresh, store or extend tokens yourself. Read `useHubToken()` for each request, since it changes. If the app sets a Content Security Policy, allow the hub in `connect-src`.
 - Do not add other sign-in methods, sessions or token handling. If something is missing, change this package instead.
