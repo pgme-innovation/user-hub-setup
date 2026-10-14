@@ -110,7 +110,7 @@ You need four things. Ask for them; never guess.
 
 ## Your dev server
 
-Run the app as usual (`bun run dev`) on the `--dev` URL you registered. Opening it with no token sends the browser to the hub (admin password once per browser), where you pick who to be; the hub sends you back signed in as them. You stay signed in across reloads and restarts for as long as that person's sign-in lasts in the hub (4 hours unless set otherwise), then the same thing happens again.
+Run the app as usual (`bun run dev`) on the `--dev` URL you registered. Opening it with no token sends the browser to the hub (admin password once per browser), where you pick who to be; the hub sends you back signed in as them. You stay signed in across reloads and restarts until that person's expiration in the hub (4 hours unless set otherwise), then the same thing happens again.
 
 - To switch person: open `<hub>/open/<key>` and pick someone else.
 - If the dev server runs on another port, run `hub-user register` again with the same `--name` and the new `--dev` URL: the hub only sends tokens back to registered URLs.
