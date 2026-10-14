@@ -33,7 +33,7 @@ The hub has one address, for example `https://hub.example.com`. The human gives 
 
 - `HUB_URL` in the app's `.env` or `.env.local`: read by `hub-user register` (**Register the app**). The human puts it there with the admin password.
 - `HUB_ISSUER` on the app's Convex deployment: `hub-user register` prints it for you (**Set the two values**).
-- `VITE_HUB_URL` in the app's frontend env: lets the dev server send you to the hub to sign in (**Wire it up**).
+- `VITE_HUB_URL` in the app's frontend env, for production builds too: lets the dev server send you to the hub to sign in, and limits token refresh to that hub (**Wire it up**).
 
 ## Before you start: ask the human
 
@@ -183,3 +183,4 @@ People are either `"member"` or `"facilitator"`, set in the hub. To give facilit
 - Check access on the server: `requireFacilitator(ctx)` / `requireHubUser(ctx)` in Convex, or `verifyHubToken` elsewhere. `useHubUser()` is for display only.
 - The provider refreshes tokens with the hub (`<hub>/api/token/refresh`) while the app is open; the hub decides how long a session lasts and when it ends, and the provider then shows the signed-out screen. Do not refresh, store or extend tokens yourself. Read `useHubToken()` for each request, since it changes. If the app sets a Content Security Policy, allow the hub in `connect-src`.
 - Do not add other sign-in methods, sessions or token handling. If something is missing, change this package instead.
+- An existing app on `@user-hub/auth` 0.1 does not refresh tokens, and a `^0.1` range never installs 0.2: update it with `bun add @user-hub/auth@latest`. No code changes are needed.
