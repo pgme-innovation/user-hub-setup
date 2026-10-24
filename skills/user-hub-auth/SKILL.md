@@ -5,7 +5,7 @@ description: Sign people into an app from their User Hub badge. Use when an app 
 
 # User Hub auth
 
-People at a workshop scan a printed QR badge. The hub sends them to whichever app is live, signed in, with a token in the URL fragment (`#token=…`) that only that app accepts. This package turns that token into a signed-in person. The app keeps its own data, keyed on the person's hub id.
+People at a workshop scan a printed QR badge. The hub sends them, signed in, to whichever app is live (or shows its app list so they pick one), with a token in the URL fragment (`#token=…`) that only that app accepts. The app gets the same token either way and needs nothing extra for the app list. This package turns that token into a signed-in person. The app keeps its own data, keyed on the person's hub id.
 
 ## Starting a new app
 
@@ -40,7 +40,7 @@ The hub has one address, for example `https://hub.example.com`. The human gives 
 You need four things. Ask for them; never guess.
 
 1. **The app's name** in the hub, unique to this app (the same name updates the same app, and apps copied from a template often share a package name).
-2. **Its local URL** (usually `http://localhost:3000`) and **its production URL** if it is deployed. Without a production URL the app can be developed but not scheduled, so badge scans never reach it; add it later by running register again with `--prod`.
+2. **Its local URL** (usually `http://localhost:3000`) and **its production URL** if it is deployed. Without a production URL the app can be developed but not scheduled or shown in the app list, so badge scans never reach it; add it later by running register again with `--prod`.
 3. **Where `HUB_URL` and `HUB_ADMIN_PASSWORD` are.** You do not have the password, and you must never ask for it in chat, write it into a file yourself, commit it or print it. Ask the human which of these applies:
    - **`.env` or `.env.local`** in the app's repo (must be gitignored): the human adds `HUB_URL=…` and `HUB_ADMIN_PASSWORD=…` themselves. `bunx hub-user` reads `.env` and `.env.local` automatically.
    - **Infisical** (or another secret manager): run the command through it, for example `infisical run -- bunx hub-user register …`.
@@ -63,7 +63,9 @@ You need four things. Ask for them; never guess.
 
    `--new` makes sure you never take over another app: if the name is already taken, nothing changes and it exits with code 3 and "already exists". Then ask the human for another name and run it again. Drop `--new` only when updating this app's own registration later.
 
-   Leave out `--prod` if the app is not deployed yet. Running it again with the same `--name` updates the URLs; a URL left out keeps the registered one. If it fails with "set HUB_URL", "set HUB_ADMIN_PASSWORD" or a wrong password, stop and ask the human; do not work around it.
+   Leave out `--prod` if the app is not deployed yet. Running it again with the same `--name` updates the URLs; a URL left out keeps the registered one, and with no URL flags it keeps the registered URLs and just prints the values. Use the exact name the app has in the hub: the hub finds the app by the key made from the name and saves the name as you typed it. Updating with no URL flags needs `@user-hub/auth` 0.2.1 or newer (`bun add @user-hub/auth@latest`); older versions ask for `--prod` or `--dev`. If it fails with "set HUB_URL", "set HUB_ADMIN_PASSWORD" or a wrong password, stop and ask the human; do not work around it.
+
+   New apps are **listed** in the badge app list by default. When the hub admin sets **Badges go to** to the app list, a scan shows the listed apps that have a production URL and the person picks one; a listed app without a production URL does not appear. Pass `--unlisted` to keep one out of it (it can still be scheduled or forced live), or `--listed` to show it again; in a starter app whose `scripts/setup.ts` mentions `--unlisted`, pass it to `bun run setup`. Both flags need `@user-hub/auth` 0.2.1 or newer (`bun add @user-hub/auth@latest`); older versions reject them. Pass neither when updating and the hub's current setting stays; the output shows it ("Listed in the badge app list: yes"). If it says the hub "did not apply" the flag, the hub is too old for the app list: tell the human; the rest of the registration went through.
 
    It prints the app **key** (made from the name), `HUB_ISSUER` and `HUB_JWKS` (server side) and `VITE_HUB_URL` (frontend). Add `--json` to parse them.
 
@@ -127,7 +129,18 @@ Then:
 
 1. `bunx convex deploy`.
 2. On the host, set `VITE_CONVEX_URL` (the production deployment's URL) and `VITE_HUB_URL` (the hub's URL).
-3. Tell the human the app is ready for the hub admin to schedule (or force live) under **Schedule**; until then badge scans go to whichever app is live.
+3. Tell the human the app is ready for the hub admin to schedule (or force live) under **Schedule**; until then badge scans go to whichever app is live. While **Badges go to** shows the app list, a listed app appears there as soon as it has its production URL.
+
+## Hub moved to a new URL
+
+When the human says the hub's URL changed, hub ids stay the same, so data keyed on the id carries over. Until the app is updated it rejects every sign-in.
+
+- **Starter apps** (they have `scripts/setup.ts`): ask the human to change `HUB_URL` in `.env.local`, then run `bun run setup`. It updates the app's own registration and sets `HUB_ISSUER`, `HUB_JWKS` and `VITE_HUB_URL` again (on the production Convex deployment too, once the app has a production URL). Then redeploy with `just push`: Vite bakes `VITE_HUB_URL` in at build time.
+- **Other apps:**
+  1. Ask the human to change `HUB_URL` where they keep it (see question 3 above).
+  2. Run `bunx hub-user register --name "<the app's name in the hub>"` without `--new` or any URL flags: it keeps the registered URLs and prints the new values. This needs `@user-hub/auth` 0.2.1 or newer: if it asks for `--prod` or `--dev`, run `bun add @user-hub/auth@latest` first. Use the exact name from the hub's **Apps** page: the CLI finds the app by the key made from the name. The printed key must equal the `app` key already in the code; if it differs, or the hub says to give a URL (no app has that name), stop and ask the human: you found another app, or none.
+  3. Set `HUB_ISSUER` and `HUB_JWKS` on every Convex deployment the app uses (`bunx convex env set …`, and again with `--prod`). Convex re-reads `auth.config.ts` with the new values straight away; no deploy is needed.
+  4. Set `VITE_HUB_URL` to the new URL in the frontend env and on the host, then rebuild and redeploy the frontend: Vite bakes it in at build time.
 
 ## Sign out
 
@@ -179,8 +192,8 @@ People are either `"member"` or `"facilitator"`, set in the hub. To give facilit
 
 ## Rules
 
-- Key all data on the hub id (`identity.subject` / `useHubUser().id`). Never on the name, and never on the badge token, which the app never sees.
+- Key all data on the hub id (`identity.subject` / `useHubUser().id`). Never on the name, never on the badge token, which the app never sees, and never on Convex's `identity.tokenIdentifier`, which includes the hub's URL and changes if the hub moves.
 - Check access on the server: `requireFacilitator(ctx)` / `requireHubUser(ctx)` in Convex, or `verifyHubToken` elsewhere. `useHubUser()` is for display only.
 - The provider refreshes tokens with the hub (`<hub>/api/token/refresh`) while the app is open; the hub decides how long a session lasts and when it ends, and the provider then shows the signed-out screen. Do not refresh, store or extend tokens yourself. Read `useHubToken()` for each request, since it changes. If the app sets a Content Security Policy, allow the hub in `connect-src`.
 - Do not add other sign-in methods, sessions or token handling. If something is missing, change this package instead.
-- An existing app on `@user-hub/auth` 0.1 does not refresh tokens, and a `^0.1` range never installs 0.2: update it with `bun add @user-hub/auth@latest`. No code changes are needed.
+- An existing app on `@user-hub/auth` 0.1 does not refresh tokens, and a `^0.1` range never installs 0.2: update it with `bun add @user-hub/auth@latest`. No code changes are needed. The same command updates 0.2.0, whose `hub-user` has no `--listed`/`--unlisted` and needs a URL flag on every run (both need 0.2.1 or newer).

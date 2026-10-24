@@ -46,7 +46,7 @@ The agent never asks for the password in chat and never writes it anywhere itsel
 ### What the agent does
 
 1. `bun add @user-hub/auth`
-2. `bunx hub-user register --name "<app name>" --dev http://localhost:3000` (and `--prod <url>` once deployed)
+2. `bunx hub-user register --name "<app name>" --new --dev http://localhost:3000` (and `--prod <url>` once deployed). New apps show in the hub's badge app list once they have a production URL; `--unlisted` keeps one out of it
 3. Sets `HUB_ISSUER` and `HUB_JWKS` on your Convex deployments and `VITE_HUB_URL` in your frontend env
 4. Wires `hubAuth`, `ConvexHubAuthProvider` and `HubSignedIn`, with facilitator-only pages where needed
 
