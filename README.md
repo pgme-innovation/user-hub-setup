@@ -12,7 +12,7 @@ The quickest way: a TanStack Start + Convex app with sign-in, sign-out, a facili
 bun create user-hub@latest my-app
 ```
 
-It asks for your hub's URL and admin password (the password shows as stars) and saves them to the app's `.env.local`. Then:
+It asks for your hub's URL, then signs the new app in to the hub: paste an API key from your hub's **Account** page (it shows as stars), or press Enter to sign in with your browser. It saves `HUB_URL` and `HUB_API_KEY` to the app's `.env.local`. Then:
 
 ```sh
 cd my-app
@@ -20,7 +20,7 @@ bun run setup    # connects Convex and the hub, once
 bun run dev      # http://localhost:3000
 ```
 
-Scripts and agents skip the questions when `HUB_URL` and `HUB_ADMIN_PASSWORD` are already in the environment. If another app already has your app's name in the hub, `bun run setup` asks you for a new one.
+Scripts and agents skip the questions when `HUB_URL` and `HUB_API_KEY` are already in the environment. If another app already has your app's name in the hub, `bun run setup` asks you for a new one.
 
 ## Add it to an existing app
 
@@ -34,14 +34,15 @@ Then ask your agent to connect your app to User Hub.
 
 ### What you need
 
-Ask the hub's admin for its URL and the admin password, and put both in your app's `.env` or `.env.local` (keep it gitignored):
+Ask the hub's admin for its URL and an account. Then sign your app's folder in to the hub:
 
 ```sh
-HUB_URL=https://hub.example.com
-HUB_ADMIN_PASSWORD=…
+bunx hub-user login --hub https://hub.example.com
 ```
 
-The agent never asks for the password in chat and never writes it anywhere itself.
+Paste an API key from your hub's **Account** page, or press Enter to sign in with your browser. It saves `HUB_URL` and `HUB_API_KEY` to the folder's `.env.local` (keep it gitignored). Your agent can also run `bunx hub-user login --browser` and show you a link: open it, sign in to the hub and approve. The agent never asks for an API key or password in chat, never writes one anywhere itself and never prints `.env.local`.
+
+Upgrading from `@user-hub/auth` 0.2: `HUB_ADMIN_PASSWORD` is no longer used; run `bunx hub-user login` and delete it from your env files.
 
 ### What the agent does
 
@@ -50,4 +51,4 @@ The agent never asks for the password in chat and never writes it anywhere itsel
 3. Sets `HUB_ISSUER` and `HUB_JWKS` on your Convex deployments and `VITE_HUB_URL` in your frontend env
 4. Wires `hubAuth`, `ConvexHubAuthProvider` and `HubSignedIn`, with facilitator-only pages where needed
 
-Open your app on its dev server and it sends you to the hub to pick who to be, then back signed in.
+Open your app on its dev server and it sends you to the hub (sign in with your account) to pick who to be, then back signed in.
