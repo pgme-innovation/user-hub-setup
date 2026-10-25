@@ -41,15 +41,17 @@ You need four things. Ask for them; never guess.
 
 1. **The app's name** in the hub, unique to this app (the same name updates the same app, and apps copied from a template often share a package name).
 2. **Its local URL** (usually `http://localhost:3000`) and **its production URL** if it is deployed. Without a production URL the app can be developed but not scheduled or shown in the app list, so badge scans never reach it; add it later by running register again with `--prod`.
-3. **Whether the app's folder is signed in to the hub.** Check it yourself with `bunx hub-user whoami` (it prints the account, or exits with code 4 when not signed in). If it is not, see **Signing in**. If the human keeps `HUB_URL` and `HUB_API_KEY` in a secret manager (Infisical, say), run every `hub-user` command through it instead (`infisical run -- bunx hub-user register …`).
+3. **Whether the app's folder is signed in to the hub.** Check it yourself with `bunx -p @user-hub/auth hub-user whoami` (it prints the account, or exits with code 4 when not signed in). If it is not, see **Signing in**. If the human keeps `HUB_URL` and `HUB_API_KEY` in a secret manager (Infisical, say), run every `hub-user` command through it instead (`infisical run -- bunx -p @user-hub/auth hub-user register …`).
 4. **Which Convex deployments** the app uses (dev, prod), so the values go on each.
 
 ## Signing in
 
-`hub-user` acts as a hub account through an API key, `HUB_API_KEY`, saved in the app folder's `.env.local` next to `HUB_URL`. You never ask for an API key or password in chat, never write one into a file yourself, never commit one and never print `.env.local`. Sign the folder in one of two ways, from the app's folder:
+`hub-user` acts as a hub account through an API key, `HUB_API_KEY`, saved in the app folder's `.env.local` next to `HUB_URL`. You never ask for an API key or password in chat, never write one into a file yourself, never commit one and never print `.env.local`. Always run the CLI as `bunx -p @user-hub/auth hub-user …`: it uses the app's installed `@user-hub/auth`, or fetches that package when the app does not have it yet. Never run a bare `bunx hub-user`: in a folder without the package it fetches an npm package called `hub-user`, which is not ours.
 
-- **The human runs** `bunx hub-user login --hub https://<hub url>` in a terminal. It asks them to paste an API key from `<hub>/account` (it shows as stars) or press Enter to sign in with the browser.
-- **You run** `bunx hub-user login --hub https://<hub url> --browser`. It prints a link and a code, then waits (up to 10 minutes) until the request is approved: run it in the background or with a long timeout, read the link from its output and give it to the human to open, sign in to the hub and approve. Never open or approve the link yourself. When it is approved, the command creates an API key for itself, saves it and prints `Signed in to <hub> as <username> (<role>)`.
+Sign the folder in one of two ways, from the app's folder:
+
+- **The human runs** `bunx -p @user-hub/auth hub-user login --hub https://<hub url>` in a terminal. It asks them to paste an API key from `<hub>/account` (it shows as stars) or press Enter to sign in with the browser.
+- **You run** `bunx -p @user-hub/auth hub-user login --hub https://<hub url> --browser`. It prints a link and a code, then waits (up to 10 minutes) until the request is approved: run it in the background or with a long timeout, read the link from its output and give it to the human to open, sign in to the hub and approve. Never open or approve the link yourself. When it is approved, the command creates an API key for itself, saves it and prints `Signed in to <hub> as <username> (<role>)`.
 
 The hub's URL comes from the human (or `HUB_URL` already in `.env.local`, which `--hub` can then be left out for). If login fails because the request was denied or expired, run it again or ask the human. An older `.env.local` with `HUB_ADMIN_PASSWORD` is no longer used: ask the human to delete that line.
 
@@ -64,7 +66,7 @@ The hub's URL comes from the human (or `HUB_URL` already in `.env.local`, which 
 2. **Register the app** from the app's repo root, once the folder is signed in (question 3 above):
 
    ```sh
-   bunx hub-user register --name "<app name>" --new --prod https://app.example.com --dev http://localhost:3000
+   bunx -p @user-hub/auth hub-user register --name "<app name>" --new --prod https://app.example.com --dev http://localhost:3000
    ```
 
    `--new` makes sure you never take over another app: if the name is already taken, nothing changes and it exits with code 3 and "already exists". Then ask the human for another name and run it again. Drop `--new` only when updating this app's own registration later.
@@ -129,7 +131,7 @@ Run the app as usual (`bun run dev`) on the `--dev` URL you registered. Opening 
 Badge scans only reach an app once the hub knows its production URL. When the human asks to set up the production URL (or says the app is deployed), ask for the deployed URL (never guess), then:
 
 - **Starter apps** (they have `scripts/setup.ts`): `bun run setup --prod https://<deployed url>`. It updates the app's own registration and sets `HUB_ISSUER` and `HUB_JWKS` on the production Convex deployment too.
-- **Other apps:** `bunx hub-user register --name "<the app's name in the hub>" --prod https://<deployed url>`, without `--new` (this updates the app's own registration; the name is `HUB_APP_NAME` in `.env.local`, or ask the human). Then set the two printed values on production: `bunx convex env set --prod HUB_ISSUER '…'` and `bunx convex env set --prod HUB_JWKS '…'`.
+- **Other apps:** `bunx -p @user-hub/auth hub-user register --name "<the app's name in the hub>" --prod https://<deployed url>`, without `--new` (this updates the app's own registration; the name is `HUB_APP_NAME` in `.env.local`, or ask the human). Then set the two printed values on production: `bunx convex env set --prod HUB_ISSUER '…'` and `bunx convex env set --prod HUB_JWKS '…'`.
 
 Then:
 
@@ -144,7 +146,7 @@ When the human says the hub's URL changed, hub ids stay the same, so data keyed 
 - **Starter apps** (they have `scripts/setup.ts`): sign the folder in to the new hub with `hub-user login --hub <new url>` (**Signing in**), then run `bun run setup`. It updates the app's own registration and sets `HUB_ISSUER`, `HUB_JWKS` and `VITE_HUB_URL` again (on the production Convex deployment too, once the app has a production URL). Then redeploy with `just push`: Vite bakes `VITE_HUB_URL` in at build time.
 - **Other apps:**
   1. Sign the app's folder in to the new hub with `hub-user login --hub <new url>` (**Signing in**); it replaces `HUB_URL` and `HUB_API_KEY` in `.env.local`. If the human keeps them in a secret manager, ask them to change them there.
-  2. Run `bunx hub-user register --name "<the app's name in the hub>"` without `--new` or any URL flags: it keeps the registered URLs and prints the new values. This needs `@user-hub/auth` 0.2.1 or newer: if it asks for `--prod` or `--dev`, run `bun add @user-hub/auth@latest` first. Use the exact name from the hub's **Apps** page: the CLI finds the app by the key made from the name. The printed key must equal the `app` key already in the code; if it differs, or the hub says to give a URL (no app has that name), stop and ask the human: you found another app, or none.
+  2. Run `bunx -p @user-hub/auth hub-user register --name "<the app's name in the hub>"` without `--new` or any URL flags: it keeps the registered URLs and prints the new values. This needs `@user-hub/auth` 0.2.1 or newer: if it asks for `--prod` or `--dev`, run `bun add @user-hub/auth@latest` first. Use the exact name from the hub's **Apps** page: the CLI finds the app by the key made from the name. The printed key must equal the `app` key already in the code; if it differs, or the hub says to give a URL (no app has that name), stop and ask the human: you found another app, or none.
   3. Set `HUB_ISSUER` and `HUB_JWKS` on every Convex deployment the app uses (`bunx convex env set …`, and again with `--prod`). Convex re-reads `auth.config.ts` with the new values straight away; no deploy is needed.
   4. Set `VITE_HUB_URL` to the new URL in the frontend env and on the host, then rebuild and redeploy the frontend: Vite bakes it in at build time.
 
