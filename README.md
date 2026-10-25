@@ -42,7 +42,7 @@ bunx -p @user-hub/auth hub-user login --hub https://hub.example.com
 
 (`-p @user-hub/auth` runs the CLI from `@user-hub/auth`, the app's copy when it has one. A bare `bunx hub-user` in a folder without the package would fetch an npm package called `hub-user`, which is not ours.) Paste an API key from your hub's **Account** page, or press Enter to sign in with your browser. It saves `HUB_URL` and `HUB_API_KEY` to the folder's `.env.local` (keep it gitignored). Your agent can also run `bunx -p @user-hub/auth hub-user login --browser` and show you a link: open it, sign in to the hub and approve. The agent never asks for an API key or password in chat, never writes one anywhere itself and never prints `.env.local`.
 
-Upgrading from `@user-hub/auth` 0.2: `HUB_ADMIN_PASSWORD` is no longer used; run `bunx -p @user-hub/auth hub-user login` and delete it from your env files.
+Hubs with accounts need `@user-hub/auth` 0.3 or newer. Upgrading from 0.2: run `bun add @user-hub/auth@latest`, then `bunx -p @user-hub/auth hub-user login`; `HUB_ADMIN_PASSWORD` is no longer used, so delete it from your env files. Apps registered before the hub had accounts belong to no account: only a hub admin can change them.
 
 ### What the agent does
 
