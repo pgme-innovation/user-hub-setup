@@ -1,11 +1,11 @@
 ---
 name: user-hub-auth
-description: Sign people into an app from their User Hub badge. Use when an app needs User Hub auth (workshop badges, QR sign-in, hubAuth, ConvexHubAuthProvider, HubAuthProvider, HubSignedIn, useHubUser, verifyHubToken, hub-user login, hub-user register), or when asked to connect an app to the hub. Never hand-roll login, passwords or token checks for these apps.
+description: Sign people into an app from their User Hub badge. Use when an app needs User Hub auth (workshop badges, QR sign-in, hubAuth, ConvexHubAuthProvider, HubAuthProvider, HubSignedIn, useHubUser, verifyHubToken, hub-user login, hub-user events, hub-user register), or when asked to connect an app to the hub. Never hand-roll login, passwords or token checks for these apps.
 ---
 
 # User Hub auth
 
-People at a workshop scan a printed QR badge. The hub sends them, signed in, to whichever app is live (or shows its app list so they pick one), with a token in the URL fragment (`#token=…`) that only that app accepts. The app gets the same token either way and needs nothing extra for the app list. This package turns that token into a signed-in person. The app keeps its own data, keyed on the person's hub id.
+People at a workshop scan a printed QR badge. One hub runs many workshops, called **events**; each person and each app belongs to one. The hub sends them, signed in, to whichever app is live in their event (or shows that event's app list so they pick one), with a token in the URL fragment (`#token=…`) that only that app accepts. The app gets the same token either way and needs nothing extra for the app list. This package turns that token into a signed-in person. The app keeps its own data, keyed on the person's hub id.
 
 ## Starting a new app
 
@@ -25,6 +25,8 @@ bun run setup    # Convex project, hub registration, HUB_ISSUER and HUB_JWKS, on
 bun run dev      # http://localhost:3000
 ```
 
+In a terminal, `bun run setup` asks which event the app is for (or creates one) and saves it as `HUB_EVENT` in `.env.local`. Without a terminal (as an agent), ask the human which event (**Before you start**) and pass it: `bun run setup --event <slug>`.
+
 That covers every step below; read on only to add User Hub to an existing app or to change the wiring.
 
 ## The hub's URL
@@ -37,12 +39,13 @@ The hub has one address, for example `https://hub.example.com`. The human gives 
 
 ## Before you start: ask the human
 
-You need four things. Ask for them; never guess.
+You need five things. Ask for them; never guess.
 
-1. **The app's name** in the hub, unique to this app (the same name updates the same app, and apps copied from a template often share a package name).
-2. **Its local URL** (usually `http://localhost:3000`) and **its production URL** if it is deployed. Without a production URL the app can be developed but not scheduled or shown in the app list, so badge scans never reach it; add it later by running register again with `--prod`.
-3. **Whether the app's folder is signed in to the hub.** Check it yourself with `bunx -p @user-hub/auth hub-user whoami` (it prints the account, or exits with code 4 when not signed in). If it is not, see **Signing in**. If the human keeps `HUB_URL` and `HUB_API_KEY` in a secret manager (Infisical, say), run every `hub-user` command through it instead (`infisical run -- bunx -p @user-hub/auth hub-user register …`).
-4. **Which Convex deployments** the app uses (dev, prod), so the values go on each.
+1. **Which event** the app is for. Run `bunx -p @user-hub/auth hub-user events` once the folder is signed in (question 4) to list the events and their slugs, and let the human pick one, or create one when they ask for it (`bunx -p @user-hub/auth hub-user events create --name "<event name>"`; ask the human for the event's time zone and pass it as `--time-zone <IANA zone>`, such as `Europe/Berlin`: it defaults to this machine's, which in a sandbox is often UTC). If `HUB_EVENT` is already in the app's environment (a starter app's `bun run setup` saves it to `.env.local`), that is the app's event: check it with the human only when asked to move the app.
+2. **The app's name** in the hub, unique to this app within the event (the same event and name update the same app, and apps copied from a template often share a package name).
+3. **Its local URL** (usually `http://localhost:3000`) and **its production URL** if it is deployed. Without a production URL the app can be developed but not scheduled or shown in the app list, so badge scans never reach it; add it later by running register again with `--prod`.
+4. **Whether the app's folder is signed in to the hub.** Check it yourself with `bunx -p @user-hub/auth hub-user whoami` (it prints the account, or exits with code 4 when not signed in). If it is not, see **Signing in**. If the human keeps `HUB_URL` and `HUB_API_KEY` in a secret manager (Infisical, say), run every `hub-user` command through it instead (`infisical run -- bunx -p @user-hub/auth hub-user register …`).
+5. **Which Convex deployments** the app uses (dev, prod), so the values go on each.
 
 ## Signing in
 
@@ -55,6 +58,8 @@ Sign the folder in one of two ways, from the app's folder:
 
 Hubs with accounts need `@user-hub/auth` 0.3 or newer. If the app already has an older one installed (its `hub-user` has no `login`), run `bun add @user-hub/auth@latest` first.
 
+Hubs with events need `@user-hub/auth` 0.4 or newer. If the app is on 0.3 (a `^0.3` range never installs 0.4; its `hub-user` has no `events`), run `bun add @user-hub/auth@latest` first.
+
 The hub's URL comes from the human (or `HUB_URL` already in `.env.local`, which `--hub` can then be left out for). If login fails because the request was denied or expired, run it again or ask the human. An older `.env.local` with `HUB_ADMIN_PASSWORD` is no longer used: ask the human to delete that line.
 
 ## Steps
@@ -65,19 +70,23 @@ The hub's URL comes from the human (or `HUB_URL` already in `.env.local`, which 
    bun add @user-hub/auth
    ```
 
-2. **Register the app** from the app's repo root, once the folder is signed in (question 3 above):
+2. **Register the app** in its event from the app's repo root, once the folder is signed in (question 4 above):
 
    ```sh
-   bunx -p @user-hub/auth hub-user register --name "<app name>" --new --prod https://app.example.com --dev http://localhost:3000
+   bunx -p @user-hub/auth hub-user register --event <slug> --name "<app name>" --new --prod https://app.example.com --dev http://localhost:3000
    ```
 
-   `--new` makes sure you never take over another app: if the name is already taken, nothing changes and it exits with code 3 and "already exists". Then ask the human for another name and run it again. Drop `--new` only when updating this app's own registration later.
+   `--event` is needed on every run; with `HUB_EVENT` in the environment (`.env.local` is read too) it can be left out (`--event` wins over it). Do not edit `.env.local` yourself: it holds the API key. With neither it fails and says how to choose one. If it exits with code 5, no event has that slug: run `hub-user events`, check the slug with the human and run it again; never create an event unless the human asks.
 
-   Leave out `--prod` if the app is not deployed yet. Running it again with the same `--name` updates the URLs; a URL left out keeps the registered one, and with no URL flags it keeps the registered URLs and just prints the values. Use the exact name the app has in the hub: the hub finds the app by the key made from the name and saves the name as you typed it. If it exits with code 4, the hub did not accept this folder's sign-in ("not signed in" or "did not accept HUB_API_KEY"): sign in again (**Signing in**); do not work around it. Any hub account can update any app, so register only under this app's own name, never another app's.
+   Always quote a name or other value that contains spaces (`--name "Summer Camp"`), here and in `hub-user events create`. If a `hub-user` command exits with code 1 and "unexpected argument", it made no request and changed nothing: fix the quoting and run it again. When you pass `--hub`, the commands the CLI suggests next keep it, so they can be run as printed.
+
+   `--new` makes sure you never take over another app: if the name is already taken, nothing changes and it exits with code 3 and "already exists". The same code 3 comes without `--new` when an app of another event holds the key. Then ask the human for another name and run it again. Drop `--new` only when updating this app's own registration later.
+
+   Leave out `--prod` if the app is not deployed yet. Running it again with the same event and `--name` updates the URLs; a URL left out keeps the registered one, and with no URL flags it keeps the registered URLs and just prints the values. Use the exact name the app has in the hub: the hub finds the app by the key made from the event's slug and the name and saves the name as you typed it. If it exits with code 4, the hub did not accept this folder's sign-in ("not signed in" or "did not accept HUB_API_KEY"): sign in again (**Signing in**); do not work around it. Any hub account can update any app, so register only under this app's own name, never another app's.
 
    New apps are **listed** in the badge app list by default. When whoever runs the hub sets **Badges go to** to the app list, a scan shows the listed apps that have a production URL and the person picks one; a listed app without a production URL does not appear. Pass `--unlisted` to keep one out of it (it can still be scheduled or forced live), or `--listed` to show it again; in a starter app whose `scripts/setup.ts` mentions `--unlisted`, pass it to `bun run setup`. Pass neither when updating and the hub's current setting stays; the output shows it ("Listed in the badge app list: yes", or "yes, once it has a production URL" without `--prod`). If it says the hub "did not apply" the flag, the hub is too old for the app list: tell the human; the rest of the registration went through.
 
-   It prints the app **key** (made from the name), `HUB_ISSUER` and `HUB_JWKS` (server side) and `VITE_HUB_URL` (frontend). Add `--json` to parse them.
+   It prints the app **key** (`<event slug>-<name>`), `HUB_ISSUER` and `HUB_JWKS` (server side) and `VITE_HUB_URL` (frontend). Add `--json` to parse them (it includes `event: { slug, name }`).
 
 3. **Set the two values** where tokens are checked:
    - Convex: `bunx convex env set HUB_ISSUER '…'` and `bunx convex env set HUB_JWKS '…'` (on every deployment the app uses).
@@ -125,7 +134,7 @@ The hub's URL comes from the human (or `HUB_URL` already in `.env.local`, which 
 Run the app as usual (`bun run dev`) on the `--dev` URL you registered. Opening it with no token sends the browser to the hub (the human signs in with their hub account once per browser), where you pick who to be; the hub sends you back signed in as them. You stay signed in across reloads and restarts until that person's expiration in the hub (4 hours unless set otherwise), then the same thing happens again.
 
 - To switch person: open `<hub>/open/<key>` and pick someone else.
-- If the dev server runs on another port, run `hub-user register` again with the same `--name` and the new `--dev` URL: the hub only sends tokens back to registered URLs.
+- If the dev server runs on another port, run `hub-user register` again with the same event and `--name` and the new `--dev` URL: the hub only sends tokens back to registered URLs.
 - This only happens on local addresses (localhost, 127.x, 10.x, 172.16-31.x, 192.168.x, *.local). In production a person without a token sees "Scan your badge to sign in".
 
 ## Production URL
@@ -133,13 +142,13 @@ Run the app as usual (`bun run dev`) on the `--dev` URL you registered. Opening 
 Badge scans only reach an app once the hub knows its production URL. When the human asks to set up the production URL (or says the app is deployed), ask for the deployed URL (never guess), then:
 
 - **Starter apps** (they have `scripts/setup.ts`): `bun run setup --prod https://<deployed url>`. It updates the app's own registration and sets `HUB_ISSUER` and `HUB_JWKS` on the production Convex deployment too.
-- **Other apps:** `bunx -p @user-hub/auth hub-user register --name "<the app's name in the hub>" --prod https://<deployed url>`, without `--new` (this updates the app's own registration; the name is `HUB_APP_NAME` in `.env.local`, or ask the human). Then set the two printed values on production: `bunx convex env set --prod HUB_ISSUER '…'` and `bunx convex env set --prod HUB_JWKS '…'`.
+- **Other apps:** `bunx -p @user-hub/auth hub-user register --event <slug> --name "<the app's name in the hub>" --prod https://<deployed url>`, without `--new` (this updates the app's own registration; the event is `HUB_EVENT` and the name `HUB_APP_NAME` in `.env.local`, or ask the human). Then set the two printed values on production: `bunx convex env set --prod HUB_ISSUER '…'` and `bunx convex env set --prod HUB_JWKS '…'`.
 
 Then:
 
 1. `bunx convex deploy`.
 2. On the host, set `VITE_CONVEX_URL` (the production deployment's URL) and `VITE_HUB_URL` (the hub's URL).
-3. Tell the human the app is ready to be scheduled (or forced live) under **Schedule** in the hub; until then badge scans go to whichever app is live. While **Badges go to** shows the app list, a listed app appears there as soon as it has its production URL.
+3. Tell the human the app is ready to be scheduled (or forced live) under **Schedule** of its event in the hub; until then badge scans go to whichever app is live in that event. While **Badges go to** shows the app list, a listed app appears there as soon as it has its production URL.
 
 ## Hub moved to a new URL
 
@@ -148,7 +157,7 @@ When the human says the hub's URL changed, hub ids stay the same, so data keyed 
 - **Starter apps** (they have `scripts/setup.ts`): sign the folder in to the new hub with `hub-user login --hub <new url>` (**Signing in**), then run `bun run setup`. It updates the app's own registration and sets `HUB_ISSUER`, `HUB_JWKS` and `VITE_HUB_URL` again (on the production Convex deployment too, once the app has a production URL). Then redeploy with `just push`: Vite bakes `VITE_HUB_URL` in at build time.
 - **Other apps:**
   1. Sign the app's folder in to the new hub with `hub-user login --hub <new url>` (**Signing in**); it replaces `HUB_URL` and `HUB_API_KEY` in `.env.local`. If the human keeps them in a secret manager, ask them to change them there.
-  2. Run `bunx -p @user-hub/auth hub-user register --name "<the app's name in the hub>"` without `--new` or any URL flags: it keeps the registered URLs and prints the new values. Use the exact name from the hub's **Apps** page: the CLI finds the app by the key made from the name. The printed key must equal the `app` key already in the code; if it differs, or the hub says to give a URL (no app has that name), stop and ask the human: you found another app, or none.
+  2. Run `bunx -p @user-hub/auth hub-user register --event <slug> --name "<the app's name in the hub>"` without `--new` or any URL flags (`--event` can be left out when `HUB_EVENT` is in `.env.local`): it keeps the registered URLs and prints the new values. Use the event's slug and the exact name from the event's **Apps** page in the hub: the CLI finds the app by the key made from both. The printed key must equal the `app` key already in the code; if it differs, or the hub says to give a URL (no app has that name), stop and ask the human: you found another app, or none.
   3. Set `HUB_ISSUER` and `HUB_JWKS` on every Convex deployment the app uses (`bunx convex env set …`, and again with `--prod`). Convex re-reads `auth.config.ts` with the new values straight away; no deploy is needed.
   4. Set `VITE_HUB_URL` to the new URL in the frontend env and on the host, then rebuild and redeploy the frontend: Vite bakes it in at build time.
 
