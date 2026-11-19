@@ -23,7 +23,7 @@ Then `bunx convex deploy`, set `VITE_CONVEX_URL` and `VITE_HUB_URL` on the host,
 Hub ids stay the same, so data keyed on the id carries over, but the app rejects every sign-in until it is updated.
 
 1. Sign the folder in to the new hub: `bunx user-hub login --hub <new url>`.
-2. **Starter apps:** `bun run setup` (add `--event <slug>` if the new hub has no event with the saved slug), then redeploy with `just push`: `VITE_HUB_URL` is built into the frontend.
+2. **Starter apps:** `bun run setup --hub-moved` (it updates the same app on the new hub; add `--event <slug>` if the new hub has no event with the saved slug), then redeploy with `just push`: `VITE_HUB_URL` is built into the frontend.
 3. **Other apps:**
    - `bunx user-hub apps register --event <slug> --name "<the app's name>"` with no `--new` and no URLs: it keeps the registered URLs and prints the new values. The printed key must equal the `app` key in the code; if it differs, or the hub asks for a URL, stop and ask the human.
    - Set `HUB_ISSUER` and `HUB_JWKS` on every Convex deployment (with and without `--prod`). No deploy needed for that.
