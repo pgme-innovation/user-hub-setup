@@ -34,20 +34,18 @@ Then ask your agent to connect your app to User Hub.
 
 ### What you need
 
-Ask the hub's admin for its URL and an account. Then sign your app's folder in to the hub:
+Ask the hub's admin for its URL and an account. Then sign your app's folder in to the hub with the `user-hub` CLI:
 
 ```sh
-bunx -p @user-hub/auth hub-user login --hub https://hub.example.com
+bunx user-hub login --hub https://hub.example.com
 ```
 
-(`-p @user-hub/auth` runs the CLI from `@user-hub/auth`, the app's copy when it has one. A bare `bunx hub-user` in a folder without the package would fetch an npm package called `hub-user`, which is not ours.) Paste an API key from your hub's **Account** page, or press Enter to sign in with your browser. It saves `HUB_URL` and `HUB_API_KEY` to the folder's `.env.local` (keep it gitignored). Your agent can also run `bunx -p @user-hub/auth hub-user login --browser` and show you a link: open it, sign in to the hub and approve. The agent never asks for an API key or password in chat, never writes one anywhere itself and never prints `.env.local`.
-
-Hubs with accounts need `@user-hub/auth` 0.3 or newer. Upgrading from 0.2: run `bun add @user-hub/auth@latest`, then `bunx -p @user-hub/auth hub-user login`; `HUB_ADMIN_PASSWORD` is no longer used, so delete it from your env files. Apps registered before the hub had accounts belong to no account: only a hub admin can change them.
+Paste an API key from your hub's **Account** page, or press Enter to sign in with your browser. It saves `HUB_URL` and `HUB_API_KEY` to the folder's `.env.local` (keep it gitignored). Your agent can also run `bunx user-hub login --browser` and show you a link: open it, sign in to the hub and approve. The agent never asks for an API key or password in chat, never writes one anywhere itself and never prints `.env.local`.
 
 ### What the agent does
 
-1. `bun add @user-hub/auth`
-2. `bunx -p @user-hub/auth hub-user register --name "<app name>" --new --dev http://localhost:3000` (and `--prod <url>` once deployed). New apps show in the hub's badge app list once they have a production URL; `--unlisted` keeps one out of it
+1. `bun add @user-hub/auth` and `bun add -d user-hub`
+2. `bunx user-hub apps register --event <slug> --name "<app name>" --new --dev http://localhost:3000` (and `--prod <url>` once deployed). New apps show in the hub's badge app list once they have a production URL; `--unlisted` keeps one out of it
 3. Sets `HUB_ISSUER` and `HUB_JWKS` on your Convex deployments and `VITE_HUB_URL` in your frontend env
 4. Wires `hubAuth`, `ConvexHubAuthProvider` and `HubSignedIn`, with facilitator-only pages where needed
 
