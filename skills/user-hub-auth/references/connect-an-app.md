@@ -1,0 +1,67 @@
+# Connect an existing app
+
+Five steps, in order. The `user-hub …` commands are explained in the **user-hub-cli** skill.
+
+## 1. Install
+
+```sh
+bun add @user-hub/auth
+bun add -d user-hub
+```
+
+## 2. Register the app
+
+From the app's folder, once it is signed in (`bunx user-hub whoami`; if it exits with code 4, sign in as the user-hub-cli skill describes):
+
+```sh
+bunx user-hub apps register --event <slug> --name "<app name>" --new --dev http://localhost:3000 [--prod https://app.example.com]
+```
+
+- `--new` never takes over another app: a taken name exits with code 3 and changes nothing. Ask the human for another name. Drop `--new` only when updating this app's own registration later.
+- Leave out `--prod` until the app is deployed.
+- It prints the app **key** (`<event slug>-<name>`), `HUB_ISSUER`, `HUB_JWKS` and `VITE_HUB_URL`. With `--json`: `key`, `env`, `hubUrl`.
+
+## 3. Set the values
+
+- Convex, on every deployment the app uses: `bunx convex env set HUB_ISSUER '…'` and `bunx convex env set HUB_JWKS '…'` (add `--prod` for production).
+- Other servers: the same two names in their environment.
+- Frontend env: `VITE_HUB_URL` (the hub's URL), for production builds too.
+
+## 4. Wire it up
+
+`convex/auth.config.ts`:
+
+```ts
+import type { AuthConfig } from "convex/server";
+import { hubAuth } from "@user-hub/auth/convex";
+
+export default { providers: [hubAuth({ app: "<key>" })] } satisfies AuthConfig;
+```
+
+The provider replaces `ConvexProvider` (same `ConvexReactClient`), **inside the root document's `<body>`**: in TanStack Start the root route's shell component (`src/routes/__root.tsx`), in a Vite SPA around `<App />`, in Next.js inside `<body>` of the root layout.
+
+```tsx
+import { ConvexHubAuthProvider, HubSignedIn } from "@user-hub/auth/convex-react";
+
+<body>
+  <ConvexHubAuthProvider client={convex} app="<key>" hubUrl={import.meta.env.VITE_HUB_URL}>
+    <HubSignedIn>{children}</HubSignedIn>
+  </ConvexHubAuthProvider>
+  <Scripts />
+</body>
+```
+
+`<HubSignedIn>` shows its children only to a signed-in person and "Scan your badge to sign in" otherwise; style that with `signedOut={…}` and the first render with `loading={…}`. Anything outside it (a public landing page) shows to everyone.
+
+**Without Convex:** `HubAuthProvider` and `HubSignedIn` from `@user-hub/auth/react`, same place, same props minus `client`.
+
+## 5. Use the person
+
+| Where | How |
+|---|---|
+| Components | `const me = useHubUser()` → `{ id, name, team, role }` or `null` |
+| Convex functions | `const me = await requireHubUser(ctx)` (throws when signed out); `getHubUser(ctx)` when signing in is optional |
+| Other servers | Send `useHubToken()` as `Authorization: Bearer <token>`; check it with `await verifyHubToken(request, { app: "<key>" })` from `@user-hub/auth/server` |
+| Sign out | `const signOut = useHubSignOut()` from the provider's entry point. It forgets this app's token only |
+
+If the app sets a Content Security Policy, allow the hub in `connect-src`: the provider calls `<hub>/api/token/refresh`.

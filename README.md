@@ -2,11 +2,18 @@
 
 > **Private beta.** User Hub is not public yet. This is for teams already running one.
 
-An agent skill that connects an app to [User Hub](https://www.npmjs.com/package/@user-hub/auth): people scan their printed badge and land in your app already signed in. Your coding agent installs [`@user-hub/auth`](https://www.npmjs.com/package/@user-hub/auth), registers the app with the hub and wires up sign-in, following the skill.
+Agent skills for [User Hub](https://www.npmjs.com/package/@user-hub/auth): people scan their printed badge and land in your app already signed in.
+
+| Skill | What your coding agent does with it |
+|---|---|
+| [`user-hub-auth`](./skills/user-hub-auth/SKILL.md) | Connects an app: installs [`@user-hub/auth`](https://www.npmjs.com/package/@user-hub/auth), registers the app, wires sign-in and facilitator pages, takes it to production |
+| [`user-hub-cli`](./skills/user-hub-cli/SKILL.md) | Runs the hub from the terminal with the [`user-hub`](https://www.npmjs.com/package/user-hub) CLI: signs a folder in, sets up a starter app, manages an event's apps and people (one at a time or from a CSV), badges and sessions |
+
+Each skill is a short `SKILL.md` with `references/` the agent reads only when it needs them.
 
 ## Start a new app
 
-The quickest way: a TanStack Start + Convex app with sign-in, sign-out, a facilitator page, `CLAUDE.md` and this skill already wired.
+The quickest way: a TanStack Start + Convex app with sign-in, sign-out, a facilitator page, `CLAUDE.md` and both skills already wired.
 
 ```sh
 bun create user-hub@latest my-app
@@ -16,7 +23,7 @@ It asks for your hub's URL, then signs the new app in to the hub: paste an API k
 
 ```sh
 cd my-app
-bun run setup    # connects Convex and the hub, once
+bun run setup    # user-hub setup: event, Convex and the hub, once
 bun run dev      # http://localhost:3000
 ```
 
@@ -24,13 +31,13 @@ Scripts and agents skip the questions when `HUB_URL` and `HUB_API_KEY` are alrea
 
 ## Add it to an existing app
 
-### Install the skill
+### Install the skills
 
 ```sh
 bunx skills add pgme-innovation/user-hub-setup
 ```
 
-Then ask your agent to connect your app to User Hub.
+It finds both skills (add `--skill user-hub-auth` or `--skill user-hub-cli` for just one). Then ask your agent to connect your app to User Hub.
 
 ### What you need
 
@@ -50,3 +57,15 @@ Paste an API key from your hub's **Account** page, or press Enter to sign in wit
 4. Wires `hubAuth`, `ConvexHubAuthProvider` and `HubSignedIn`, with facilitator-only pages where needed
 
 Open your app on its dev server and it sends you to the hub (sign in with your account) to pick who to be, then back signed in.
+
+## Manage an event from the terminal
+
+With the folder signed in, the same CLI (or your agent, following `user-hub-cli`) does what the hub's People and Apps pages do:
+
+```sh
+bunx user-hub events list
+bunx user-hub people create --file people.csv --event <slug>   # name,team,role,expiry
+bunx user-hub people list --badges
+bunx user-hub apps list
+bunx user-hub --help
+```
