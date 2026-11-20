@@ -73,7 +73,9 @@ const { hubToken } = Route.useRouteContext();
 <ConvexHubAuthProvider client={convex} app="<key>" hubUrl={import.meta.env.VITE_HUB_URL} initialToken={hubToken}>
 ```
 
-With `ConvexQueryClient` (Convex through TanStack Query), also call `context.convexQueryClient.serverHttpClient?.setAuth(hubToken)` in `beforeLoad` when there is a token, so server-side queries run as the person. Never read or set the `user-hub-token.<key>` cookie yourself: the provider writes it and `getHubToken` reads it.
+With `ConvexQueryClient` (Convex through TanStack Query), also call `context.convexQueryClient.serverHttpClient?.setAuth(hubToken)` in `beforeLoad` when there is a token, so server-side queries run as the person.
+
+With Convex, create the client so queries wait for the person's token and keep it, instead of running signed out first and then signing in twice: `new ConvexReactClient(url, { expectAuth: true, initialAuthTokenReuse: true })`, or the same options as the second argument of `new ConvexQueryClient(url, …)`. On Vite, also pre-bundle Convex and this package together, so the browser holds one `convex/react` ("Could not find Convex client" otherwise): `optimizeDeps: { include: ["convex/react", "@user-hub/auth/convex-react"] }`, plus `"@convex-dev/react-query"` when you use it. Never read or set the `user-hub-token.<key>` cookie yourself: the provider writes it and `getHubToken` reads it.
 
 ## 5. Use the person
 
