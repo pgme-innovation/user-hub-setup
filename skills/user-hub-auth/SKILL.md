@@ -36,6 +36,7 @@ The hub's URL also comes from the human. It goes in three places with the same v
 - **Key data on the hub id** (`useHubUser().id`, `identity.subject` in Convex). Never on the name, the badge, or Convex's `tokenIdentifier`, which contains the hub's URL and changes if the hub moves.
 - **Check access on the server**: `requireHubUser(ctx)` / `requireFacilitator(ctx)` in Convex, `verifyHubToken` elsewhere. `useHubUser()` is for display; hiding a page protects nothing.
 - **Mount the provider inside `<body>`**, around the page content, never outside `<html>` or in the router's `Wrap`. It always renders its children; `<HubSignedIn>` does the gating.
+- **Server rendering (TanStack Start):** pass `getHubToken()` from `@user-hub/auth/start` to the provider as `initialToken` from the root route's `beforeLoad` ([references/connect-an-app.md](references/connect-an-app.md)), so a page load renders the person instead of `loading`. Everything inside `<HubSignedIn>` then renders on the server: keep `window` and `document` inside effects.
 - **Let the provider own the token.** It refreshes it with the hub while the app is open and signs the person out when the hub ends the session. Do not store, refresh or extend tokens yourself; read `useHubToken()` for each request.
 - **No other sign-in.** No login screens, passwords or sessions. If something is missing, it belongs in `@user-hub/auth`.
 - **Secrets stay out of chat and files you write.** The API key lives only in `.env.local`, saved by `user-hub login`.

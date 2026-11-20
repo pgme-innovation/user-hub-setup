@@ -55,6 +55,26 @@ import { ConvexHubAuthProvider, HubSignedIn } from "@user-hub/auth/convex-react"
 
 **Without Convex:** `HubAuthProvider` and `HubSignedIn` from `@user-hub/auth/react`, same place, same props minus `client`.
 
+**Render signed in on the server (TanStack Start).** Without this, every page load or refresh shows `loading` until the page hydrates. Read the token in the root route and pass it as `initialToken`:
+
+```tsx
+import { createServerFn } from "@tanstack/react-start";
+import { getHubToken } from "@user-hub/auth/start";
+
+const fetchHubToken = createServerFn({ method: "GET" }).handler(() =>
+  getHubToken({ app: "<key>", hubUrl: import.meta.env.VITE_HUB_URL }),
+);
+
+// In createRootRoute / createRootRouteWithContext (server only: the browser already has the token):
+beforeLoad: async () => ({ hubToken: import.meta.env.SSR ? await fetchHubToken() : null }),
+
+// In the shell component:
+const { hubToken } = Route.useRouteContext();
+<ConvexHubAuthProvider client={convex} app="<key>" hubUrl={import.meta.env.VITE_HUB_URL} initialToken={hubToken}>
+```
+
+With `ConvexQueryClient` (Convex through TanStack Query), also call `context.convexQueryClient.serverHttpClient?.setAuth(hubToken)` in `beforeLoad` when there is a token, so server-side queries run as the person. Never read or set the `user-hub-token.<key>` cookie yourself: the provider writes it and `getHubToken` reads it.
+
 ## 5. Use the person
 
 | Where | How |
