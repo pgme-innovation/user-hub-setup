@@ -1,6 +1,6 @@
 ---
 name: user-hub-auth
-description: Sign people into an app from their printed User Hub badge with @user-hub/auth. Use when connecting an app to a User Hub, adding badge or QR sign-in, wiring hubAuth, ConvexHubAuthProvider, HubAuthProvider, HubSignedIn, useHubUser or verifyHubToken, building facilitator-only pages, or moving an app to a new hub URL or to production. Use it even when the user only says "connect this to the hub" or "add sign-in for the workshop". Never hand-roll login, passwords or token checks for these apps.
+description: Sign people into an app from their printed User Hub badge with @user-hub/auth. Use when connecting an app to a User Hub, adding badge or QR sign-in, wiring hubAuth, ConvexHubAuthProvider, HubAuthProvider, HubSignedIn, useHubUser or verifyHubToken, protecting TanStack Start server functions or server routes (hubConvexMiddleware, hubMiddleware), building facilitator-only pages, or moving an app to a new hub URL or to production. Use it even when the user only says "connect this to the hub" or "add sign-in for the workshop". Never hand-roll login, passwords or token checks for these apps.
 ---
 
 # User Hub auth
@@ -15,6 +15,7 @@ Registering apps, signing a folder in to the hub and managing people is done wit
 |---|---|
 | No app yet | Scaffold one: `bun create user-hub@latest my-app`, then `bun run setup` and `bun run dev` in it. It comes wired; read on only to change the wiring |
 | Existing app, not connected | Follow [references/connect-an-app.md](references/connect-an-app.md): install, register, set the values, wire the provider, use the person |
+| Server functions or server routes that act as the person (TanStack Start) | [references/server-functions.md](references/server-functions.md) |
 | Facilitator-only pages or actions | [references/roles.md](references/roles.md) |
 | Running it locally, going to production, or the hub moved | [references/dev-and-production.md](references/dev-and-production.md) |
 
@@ -34,7 +35,7 @@ The hub's URL also comes from the human. It goes in three places with the same v
 ## Rules
 
 - **Key data on the hub id** (`useHubUser().id`, `identity.subject` in Convex). Never on the name, the badge, or Convex's `tokenIdentifier`, which contains the hub's URL and changes if the hub moves.
-- **Check access on the server**: `requireHubUser(ctx)` / `requireFacilitator(ctx)` in Convex, `verifyHubToken` elsewhere. `useHubUser()` is for display; hiding a page protects nothing.
+- **Check access on the server**: `requireHubUser(ctx)` / `requireFacilitator(ctx)` in Convex, `hub.serverFn` / `hub.request` middleware on TanStack Start server functions and routes ([references/server-functions.md](references/server-functions.md)), `verifyHubToken` elsewhere. `useHubUser()` is for display; hiding a page protects nothing.
 - **Mount the provider inside `<body>`**, around the page content, never outside `<html>` or in the router's `Wrap`. It always renders its children; `<HubSignedIn>` does the gating.
 - **Server rendering (TanStack Start):** pass `getHubToken()` from `@user-hub/auth/start` to the provider as `initialToken` from the root route's `beforeLoad` ([references/connect-an-app.md](references/connect-an-app.md)), so a page load renders the person instead of `loading`. Everything inside `<HubSignedIn>` then renders on the server: keep `window` and `document` inside effects. With Convex, create the client with `expectAuth: true` and `initialAuthTokenReuse: true`.
 - **Let the provider own the token.** It refreshes it with the hub while the app is open and signs the person out when the hub ends the session. Do not store, refresh or extend tokens yourself; read `useHubToken()` for each request.

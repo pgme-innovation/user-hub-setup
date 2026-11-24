@@ -83,7 +83,8 @@ With Convex, create the client so queries wait for the person's token and keep i
 |---|---|
 | Components | `const me = useHubUser()` → `{ id, name, team, role }` or `null` |
 | Convex functions | `const me = await requireHubUser(ctx)` (throws when signed out); `getHubUser(ctx)` when signing in is optional |
-| Other servers | Send `useHubToken()` as `Authorization: Bearer <token>`; check it with `await verifyHubToken(request, { app: "<key>" })` from `@user-hub/auth/server` |
+| TanStack Start server functions and routes | `hubConvexMiddleware` (or `hubMiddleware`): [server-functions.md](server-functions.md) |
+| Other servers | Send `useHubToken()` as `Authorization: Bearer <token>`; check it with `await verifyHubToken(request, { app: "<key>", hubUrl })` from `@user-hub/auth/server` (`hubUrl` is the issuer when the server has no `HUB_ISSUER`) |
 | Sign out | `const signOut = useHubSignOut()` from the provider's entry point. It forgets this app's token only |
 
 If the app sets a Content Security Policy, allow the hub in `connect-src`: the provider calls `<hub>/api/token/refresh`.
