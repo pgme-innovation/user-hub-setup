@@ -40,7 +40,7 @@ export const saveSummary = createServerFn({ method: "POST" })
   });
 ```
 
-Call it like any server function (`await saveSummary({ data })`), from anywhere inside the provider. The browser half sends the person's current token, refreshed first when it is about to expire: no wrapper hook, no headers at the call site. Without a valid token the handler never runs and the call throws "Scan your badge to sign in.".
+Call it like any server function (`await saveSummary({ data })`), from anywhere inside the provider: event handlers, effects, route loaders and queries (`useSuspenseQuery` included), on the first page load too. The browser half sends the person's current token, refreshed first when it is about to expire (a call made before the provider is ready, during the page's first render, waits for it): no wrapper hook, no headers at the call site. While the server renders a page (a loader or query run there) there is no browser to send a token, so it uses the person's cookie, as `getHubToken` does. Without a valid token the handler never runs and the call throws "Scan your badge to sign in.".
 
 ## 3. Server routes
 
@@ -70,5 +70,6 @@ Without a valid token it answers 401 "Scan your badge to sign in.".
 - **Convex still checks.** Keep `requireHubUser(ctx)` / `requireFacilitator(ctx)` in every Convex function `context.convex` calls: the middleware proves who is asking, Convex decides what they may do. Check roles on `context.hub.role` for anything outside Convex.
 - **Every server function or route that touches private data** gets `hub.serverFn` or `hub.request`. A route guard (`beforeLoad`) is not protection: server functions are reachable on their own.
 - **CSRF:** Start protects server functions from cross-site calls by default. An app that defines `src/start.ts` must add `createCsrfMiddleware` itself (see TanStack Start's server functions guide).
-- **Loaders during server rendering** have no browser to send the token: use `getHubToken` there (see [connect-an-app.md](connect-an-app.md)), not these middleware.
+- **Server routes take only the header**, never the cookie: a server route is an API anyone can call. Server functions take the cookie only while the server renders a page; a call from the browser always needs the token the middleware sends.
+- **Types:** `HubConvexContext` (`context.hub`, `context.hubToken`, `context.convex`) from `@user-hub/auth/start-convex`, `HubAuthContext` from `@user-hub/auth/start-middleware`, for helpers that take the handler's context.
 - **Create the middleware once** and import it; do not call `hubConvexMiddleware` per function.
