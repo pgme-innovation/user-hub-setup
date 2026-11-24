@@ -16,6 +16,7 @@ Registering apps, signing a folder in to the hub and managing people is done wit
 | No app yet | Scaffold one: `bun create user-hub@latest my-app`, then `bun run setup` and `bun run dev` in it. It comes wired; read on only to change the wiring |
 | Existing app, not connected | Follow [references/connect-an-app.md](references/connect-an-app.md): install, register, set the values, wire the provider, use the person |
 | Server functions or server routes that act as the person (TanStack Start) | [references/server-functions.md](references/server-functions.md) |
+| An app that checks tokens itself in server code (a header-adding hook, `verifyHubToken` plus `ConvexHttpClient`) | Replace it: "Moving from a hand-rolled version" in [references/server-functions.md](references/server-functions.md) |
 | Facilitator-only pages or actions | [references/roles.md](references/roles.md) |
 | Running it locally, going to production, or the hub moved | [references/dev-and-production.md](references/dev-and-production.md) |
 
@@ -38,6 +39,6 @@ The hub's URL also comes from the human. It goes in three places with the same v
 - **Check access on the server**: `requireHubUser(ctx)` / `requireFacilitator(ctx)` in Convex, `hub.serverFn` / `hub.request` middleware on TanStack Start server functions and routes ([references/server-functions.md](references/server-functions.md)), `verifyHubToken` elsewhere. `useHubUser()` is for display; hiding a page protects nothing.
 - **Mount the provider inside `<body>`**, around the page content, never outside `<html>` or in the router's `Wrap`. It always renders its children; `<HubSignedIn>` does the gating.
 - **Server rendering (TanStack Start):** pass `getHubToken()` from `@user-hub/auth/start` to the provider as `initialToken` from the root route's `beforeLoad` ([references/connect-an-app.md](references/connect-an-app.md)), so a page load renders the person instead of `loading`. Everything inside `<HubSignedIn>` then renders on the server: keep `window` and `document` inside effects. With Convex, create the client with `expectAuth: true` and `initialAuthTokenReuse: true`.
-- **Let the provider own the token.** It refreshes it with the hub while the app is open and signs the person out when the hub ends the session. Do not store, refresh or extend tokens yourself; read `useHubToken()` for each request.
+- **Let the provider own the token.** It refreshes it with the hub while the app is open and signs the person out when the hub ends the session. Do not store, refresh or extend tokens yourself. Server functions behind `hub.serverFn` get it by themselves (no headers, no wrapper hook); for anything else read `useHubToken()` for each request.
 - **No other sign-in.** No login screens, passwords or sessions. If something is missing, it belongs in `@user-hub/auth`.
 - **Secrets stay out of chat and files you write.** The API key lives only in `.env.local`, saved by `user-hub login`.

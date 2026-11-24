@@ -16,7 +16,9 @@ Badge scans reach the app only once the hub knows its production URL. Ask the hu
 - **Starter apps:** `bun run setup --prod https://<deployed url>`. It also sets `HUB_ISSUER` and `HUB_JWKS` on the production Convex deployment.
 - **Other apps:** `bunx user-hub apps register --event <slug> --name "<the app's name>" --prod https://<deployed url>` without `--new`, then `bunx convex env set --prod HUB_ISSUER '…'` and `… HUB_JWKS '…'`.
 
-Then `bunx convex deploy`, set `VITE_CONVEX_URL` and `VITE_HUB_URL` on the host, and tell the human the app can be scheduled or forced live under **Schedule** of its event. While the event's badges go to the app list, a listed app with a production URL appears there straight away.
+Then `bunx convex deploy`, set `VITE_CONVEX_URL` and `VITE_HUB_URL` on the host (at build time: Vite builds them in), and tell the human the app can be scheduled or forced live under **Schedule** of its event. While the event's badges go to the app list, a listed app with a production URL appears there straight away.
+
+Server functions and server routes behind `hub.serverFn` / `hub.request` need nothing more on the host: they check tokens against the built-in `VITE_HUB_URL` and the hub's published key. `HUB_ISSUER` and `HUB_JWKS` in the host's runtime environment are optional; when set, they win, so keep them right (see below).
 
 ## The hub moved to a new URL
 
@@ -28,3 +30,4 @@ Hub ids stay the same, so data keyed on the id carries over, but the app rejects
    - `bunx user-hub apps register --event <slug> --name "<the app's name>"` with no `--new` and no URLs: it keeps the registered URLs and prints the new values. The printed key must equal the `app` key in the code; if it differs, or the hub asks for a URL, stop and ask the human.
    - Set `HUB_ISSUER` and `HUB_JWKS` on every Convex deployment (with and without `--prod`). No deploy needed for that.
    - Set `VITE_HUB_URL` to the new URL, then rebuild and redeploy the frontend.
+4. **Any app whose server sets `HUB_ISSUER` or `HUB_JWKS` in its own runtime environment** (for `verifyHubToken` or the server-function middleware): update them there too, or every server call rejects sign-ins. Starter apps set none.

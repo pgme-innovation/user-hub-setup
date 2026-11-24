@@ -27,7 +27,20 @@ export const myVotes = query({
 });
 ```
 
-Not Convex: check `(await verifyHubToken(request, { app })).role`.
+TanStack Start server functions and server routes (behind `hub.serverFn` / `hub.request`, see [server-functions.md](server-functions.md)): check `context.hub.role`, and keep `requireFacilitator(ctx)` in any Convex function `context.convex` calls:
+
+```ts
+export const resetEvent = createServerFn({ method: "POST" })
+  .middleware([hub.serverFn])
+  .handler(async ({ context }) => {
+    if (context.hub.role !== "facilitator") {
+      throw new Error("This is for facilitators.");
+    }
+    // …
+  });
+```
+
+Any other server: check `(await verifyHubToken(request, { app })).role`.
 
 ## UI: only for a clean screen
 
