@@ -52,7 +52,7 @@ Paste an API key from your hub's **Account** page, or press Enter to sign in wit
 ### What the agent does
 
 1. `bun add @user-hub/auth` and `bun add -d user-hub`
-2. `bunx user-hub apps register --event <slug> --name "<app name>" --new --dev http://localhost:3000` (and `--prod <url>` once deployed). New apps show in the hub's badge app list once they have a production URL; `--unlisted` keeps one out of it
+2. `bunx user-hub apps register --event <slug> --name "<app name>" --new --dev http://localhost:3000` (plus `--prod <url>` if already deployed). An app has a list of development URLs, managed with `bunx user-hub dev`, and a production URL, managed with `bunx user-hub prod` (outside a starter app, add `--event <slug> --app "<app name>"`). New apps show in the hub's badge app list once they have a production URL; `--unlisted` keeps one out of it
 3. Sets `HUB_ISSUER` and `HUB_JWKS` on your Convex deployments and `VITE_HUB_URL` in your frontend env
 4. Wires `hubAuth`, `ConvexHubAuthProvider` and `HubSignedIn`, with facilitator-only pages where needed
 

@@ -1,6 +1,6 @@
 ---
 name: user-hub-cli
-description: Run a User Hub from the terminal with the user-hub CLI (bunx user-hub). Use for signing an app folder in to a hub (user-hub login, whoami), setting up a create-user-hub starter app (user-hub setup, bun run setup), listing or creating events, registering, updating or deleting apps, and listing, adding (one or from a CSV/JSON file), editing, moving or deleting an event's people, showing or regenerating badges, drawing a badge's QR code in the terminal, saving badge QR codes as SVG files to print (one, or every badge of an event with a badges.csv index) and signing people out. Use it whenever the user mentions the hub's events, people, attendees, badges or app registration, even without naming the CLI.
+description: Run a User Hub from the terminal with the user-hub CLI (bunx user-hub). Use for signing an app folder in to a hub (user-hub login, whoami), setting up a create-user-hub starter app (user-hub setup, bun run setup), an app's development URLs (user-hub dev) and production URL (user-hub prod), listing or creating events, registering, updating or deleting apps, and listing, adding (one or from a CSV/JSON file), editing, moving or deleting an event's people, showing or regenerating badges, drawing a badge's QR code in the terminal, saving badge QR codes as SVG files to print (one, or every badge of an event with a badges.csv index) and signing people out. Use it whenever the user mentions the hub's events, people, attendees, badges or app registration, even without naming the CLI.
 ---
 
 # user-hub CLI
@@ -12,7 +12,7 @@ description: Run a User Hub from the terminal with the user-hub CLI (bunx user-h
 ## Before any command
 
 1. **Is the folder signed in?** `bunx user-hub whoami`. Exit code 4 means no: see [references/signing-in.md](references/signing-in.md). Never ask for an API key in chat.
-2. **Which event?** `apps` and `people` commands work on one event: `--event <slug>`, else `event` in `./user-hub.json` (written by `user-hub setup`). `bunx user-hub events list` shows the slugs. If neither is known, ask the human.
+2. **Which event?** `apps`, `people`, `dev` and `prod` commands work on one event: `--event <slug>`, else `event` in `./user-hub.json` (written by `user-hub setup`). `bunx user-hub events list` shows the slugs. If neither is known, ask the human. `dev` and `prod` work on this folder's app (`name` in `./user-hub.json`), or `--app <key or name>`.
 
 ## What to read
 
@@ -20,7 +20,7 @@ description: Run a User Hub from the terminal with the user-hub CLI (bunx user-h
 |---|---|
 | Sign in, sign out, check the account | [references/signing-in.md](references/signing-in.md) |
 | Set up or update a starter app (`bun run setup`) | [references/setup.md](references/setup.md) |
-| Events; register, list, update or delete apps | [references/events-and-apps.md](references/events-and-apps.md) |
+| Events; register, list, update or delete apps; an app's development URLs (`user-hub dev`) and production URL (`user-hub prod`) | [references/events-and-apps.md](references/events-and-apps.md) |
 | People: list, add, import a file, edit, move, delete, badges and their QR codes (terminal, SVG files to print), sign out | [references/people.md](references/people.md) |
 
 ## How it behaves

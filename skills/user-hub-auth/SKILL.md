@@ -20,7 +20,7 @@ Registering apps, signing a folder in to the hub and managing people is done wit
 | Facilitator-only pages or actions | [references/roles.md](references/roles.md) |
 | Running it locally, going to production, or the hub moved | [references/dev-and-production.md](references/dev-and-production.md) |
 
-A starter app is one whose `package.json` has `"setup": "user-hub setup"`: for it, prefer `bun run setup` (with `--event`, `--prod` or `--dev`) over doing the steps by hand.
+A starter app is one whose `package.json` has `"setup": "user-hub setup"`: for it, prefer `bun run setup` (with `--event`) over doing the steps by hand, and `user-hub dev` / `user-hub prod` for its development URLs and production URL.
 
 ## Ask the human first
 
@@ -28,7 +28,7 @@ Never guess these; ask:
 
 1. **Which event** the app is for (the CLI lists them). Create an event only when the human asks.
 2. **The app's name** in the hub, unique within the event.
-3. **Its local URL** (usually `http://localhost:3000`) and its **production URL** once deployed.
+3. **Its local URLs** (usually `http://localhost:3000`; an app has a list of development URLs) and its **production URL** once deployed.
 4. **Which Convex deployments** it uses (dev, prod), so the values go on each.
 
 The hub's URL also comes from the human. It goes in three places with the same value: `HUB_URL` (saved by `user-hub login`), `HUB_ISSUER` on Convex, and `VITE_HUB_URL` in the frontend env.

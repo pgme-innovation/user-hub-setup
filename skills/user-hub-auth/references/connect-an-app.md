@@ -18,7 +18,7 @@ bunx user-hub apps register --event <slug> --name "<app name>" --new --dev http:
 ```
 
 - `--new` never takes over another app: a taken name exits with code 3 and changes nothing. Ask the human for another name. Drop `--new` only when updating this app's own registration later.
-- Leave out `--prod` until the app is deployed.
+- Leave out `--prod` until the app is deployed; then set it with `bunx user-hub prod set <url> --event <slug> --app "<app name>"`. An app has a list of development URLs: add others with `bunx user-hub dev add <url> --event <slug> --app "<app name>"`.
 - It prints the app **key** (`<event slug>-<name>`), `HUB_ISSUER`, `HUB_JWKS` and `VITE_HUB_URL`. With `--json`: `key`, `env`, `hubUrl`.
 
 ## 3. Set the values

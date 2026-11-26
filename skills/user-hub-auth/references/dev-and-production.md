@@ -2,10 +2,10 @@
 
 ## Your dev server
 
-Run the app on the development URL registered with the hub. With no token, it sends the browser to the hub, where the human (signed in to the hub once per browser) picks who to be, and comes back signed in. That lasts across reloads until the person's session in the hub ends (4 hours unless set otherwise).
+Run the app on one of the development URLs registered with the hub (an app has a list of them). With no token, it sends the browser to the hub, where the human (signed in to the hub once per browser) picks who to be, and comes back signed in. That lasts across reloads until the person's session in the hub ends (4 hours unless set otherwise).
 
 - **Switch person:** open `<hub>/open/<key>`.
-- **Another port:** the hub only sends tokens to registered URLs. Starter apps: `bun run setup --dev http://localhost:<port>` and change the port in the `dev` script too. Others: `bunx user-hub apps register` again with the same event, `--name` and the new `--dev`.
+- **Another port:** the hub only sends tokens to registered URLs. Starter apps: `bunx user-hub dev add http://localhost:<port>` and change the port in the `dev` script too. Others: the same with `--event <slug> --app "<the app's name>"`. `bunx user-hub dev list` shows them, `dev remove <url>` drops an old one.
 - **Test people:** `bunx user-hub people create --name "Test Person" --team Test` (user-hub-cli skill).
 - This redirect only happens on local addresses (localhost, 127.x, 10.x, 172.16-31.x, 192.168.x, *.local). In production a person without a token sees "Scan your badge to sign in".
 
@@ -13,8 +13,8 @@ Run the app on the development URL registered with the hub. With no token, it se
 
 Badge scans reach the app only once the hub knows its production URL. Ask the human for the deployed URL (never guess), then:
 
-- **Starter apps:** `bun run setup --prod https://<deployed url>`. It also sets `HUB_ISSUER` and `HUB_JWKS` on the production Convex deployment.
-- **Other apps:** `bunx user-hub apps register --event <slug> --name "<the app's name>" --prod https://<deployed url>` without `--new`, then `bunx convex env set --prod HUB_ISSUER '…'` and `… HUB_JWKS '…'`.
+- **Starter apps:** `bunx user-hub prod set https://<deployed url>`. It also sets `HUB_ISSUER` and `HUB_JWKS` on the production Convex deployment.
+- **Other apps:** `bunx user-hub prod set https://<deployed url> --event <slug> --app "<the app's name>"`, then `bunx convex env set --prod HUB_ISSUER '…'` and `… HUB_JWKS '…'` (`bunx user-hub apps register --event <slug> --name "<the app's name>"` without `--new` prints them).
 
 Then `bunx convex deploy`, set `VITE_CONVEX_URL` and `VITE_HUB_URL` on the host (at build time: Vite builds them in), and tell the human the app can be scheduled or forced live under **Schedule** of its event. While the event's badges go to the app list, a listed app with a production URL appears there straight away.
 
